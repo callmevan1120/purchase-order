@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistem Purchase Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library SheetJS: CDN cdnjs lebih stabil di Chrome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
       rel="stylesheet"
@@ -439,8 +441,72 @@
                     >
                     <span class="font-bold text-gray-900" id="dSub">Rp 0</span>
                   </div>
+                  <div
+                    class="flex items-center justify-between bg-purple-50 rounded-lg px-4 py-3 border border-purple-100"
+                  >
+                    <span class="font-semibold text-purple-700 text-sm"
+                      >Diskon</span
+                    >
+                    <span class="font-bold text-purple-700" id="dDisc"
+                      >- Rp 0</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center justify-between bg-blue-50 rounded-lg px-4 py-3 border border-blue-100"
+                  >
+                    <span class="font-semibold text-blue-700 text-sm"
+                      >Nilai Lain (11/12)</span
+                    >
+                    <span class="font-bold text-blue-700" id="dNilaiLain"
+                      >Rp 0</span
+                    >
+                  </div>
                 </div>
                 <div class="space-y-3">
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Diskon</label
+                    >
+                    <div class="flex gap-2 items-center">
+                      <div
+                        class="flex rounded-lg overflow-hidden border border-stone-300 shrink-0"
+                      >
+                        <button
+                          type="button"
+                          class="seg-btn on px-3 py-2 text-xs font-bold"
+                          data-tax="discount"
+                          data-mode="percent"
+                          onclick="setTaxM('discount', 'percent')"
+                        >
+                          %
+                        </button>
+                        <button
+                          type="button"
+                          class="seg-btn px-3 py-2 text-xs font-bold bg-stone-50 text-gray-500"
+                          data-tax="discount"
+                          data-mode="nominal"
+                          onclick="setTaxM('discount', 'nominal')"
+                        >
+                          Rp
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        id="fDiscount"
+                        inputmode="decimal"
+                        value="0"
+                        class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition text-right"
+                        oninput="recalc()"
+                        onblur="taxBl(this)"
+                      />
+                      <span
+                        class="text-xs text-gray-500 font-medium w-5 shrink-0"
+                        id="discountSfx"
+                        >%</span
+                      >
+                    </div>
+                  </div>
                   <div>
                     <label
                       class="block text-xs font-semibold text-gray-600 mb-1"
@@ -473,7 +539,7 @@
                         type="text"
                         id="fPPN"
                         inputmode="decimal"
-                        value="11"
+                        value="12"
                         class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition text-right"
                         oninput="recalc()"
                         onblur="taxBl(this)"
@@ -517,7 +583,7 @@
                         type="text"
                         id="fPPH"
                         inputmode="decimal"
-                        value="0"
+                        value="2"
                         class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition text-right"
                         oninput="recalc()"
                         onblur="taxBl(this)"
@@ -548,13 +614,35 @@
                     >
                   </div>
                   <div class="flex justify-between text-sm">
-                    <span class="text-green-700" id="bkPpnLabel">PPN (11%)</span
+                    <span class="text-purple-700" id="bkDiscLabel"
+                      >Diskon (0%)</span
+                    ><span class="font-semibold text-purple-700" id="bkDiscVal"
+                      >- Rp 0</span
+                    >
+                  </div>
+                  <div
+                    class="flex justify-between text-sm border-b border-dashed border-stone-300 pb-2"
+                  >
+                    <span class="text-gray-600 font-semibold"
+                      >Base Setelah Diskon</span
+                    ><span class="font-bold text-gray-900" id="bkBaseDisc"
+                      >Rp 0</span
+                    >
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-blue-700">Nilai Lain (11/12)</span
+                    ><span class="font-semibold text-blue-700" id="bkNilaiLain"
+                      >Rp 0</span
+                    >
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-green-700" id="bkPpnLabel">PPN (12%)</span
                     ><span class="font-semibold text-green-700" id="bkPpnVal"
                       >+ Rp 0</span
                     >
                   </div>
                   <div class="flex justify-between text-sm">
-                    <span class="text-red-600" id="bkPphLabel">PPH (0%)</span
+                    <span class="text-red-600" id="bkPphLabel">PPH (2%)</span
                     ><span class="font-semibold text-red-600" id="bkPphVal"
                       >- Rp 0</span
                     >
@@ -568,7 +656,7 @@
                         <i class="fa-solid fa-receipt text-white text-xs"></i>
                       </div>
                       <span class="font-bold text-amber-800 text-sm"
-                        >Total Pesanan</span
+                        >Total Pesan</span
                       >
                     </div>
                     <span
@@ -738,7 +826,11 @@
               </button>
             </div>
           </div>
-          <div class="px-6 py-3 border-b border-stone-200 bg-stone-50/60">
+
+          <!-- Filter Tabel & Export -->
+          <div
+            class="px-6 py-3 border-b border-stone-200 bg-stone-50/60 space-y-3"
+          >
             <div class="flex flex-col sm:flex-row gap-3">
               <div class="relative flex-1">
                 <i
@@ -752,9 +844,36 @@
                   oninput="renderList()"
                 />
               </div>
+              <input
+                type="text"
+                id="fltReceiver"
+                placeholder="Cari Perusahaan Penerima..."
+                class="w-full sm:w-56 px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                oninput="renderList()"
+              />
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 items-center">
+              <div class="flex gap-2 items-center w-full sm:w-auto">
+                <label class="text-xs font-semibold text-gray-600 shrink-0"
+                  >Tgl Rilis:</label
+                >
+                <input
+                  type="date"
+                  id="fltDateFrom"
+                  class="flex-1 sm:flex-none px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  onchange="renderList()"
+                />
+                <span class="text-gray-400 text-xs">s/d</span>
+                <input
+                  type="date"
+                  id="fltDateTo"
+                  class="flex-1 sm:flex-none px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  onchange="renderList()"
+                />
+              </div>
               <select
                 id="fltPay"
-                class="px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                class="w-full sm:w-auto px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
                 onchange="renderList()"
               >
                 <option value="all">Semua Pembayaran</option>
@@ -763,7 +882,7 @@
               </select>
               <select
                 id="fltClaim"
-                class="px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                class="w-full sm:w-auto px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
                 onchange="renderList()"
               >
                 <option value="all">Semua Claim</option>
@@ -772,6 +891,7 @@
               </select>
             </div>
           </div>
+
           <div class="tbl-wrap">
             <table class="w-full text-sm">
               <thead>
@@ -847,10 +967,10 @@
       var poList = [];
       var editingId = null;
       var rowIdC = 0;
-      var taxModes = { ppn: "percent", pph: "percent" };
+      var taxModes = { ppn: "percent", pph: "percent", discount: "percent" };
       var delTarget = null;
 
-      // ============ FORMAT RUPIAH — MANUAL, MENDUKUNG DESIMAL ============
+      // ============ FORMAT RUPIAH ============
       function fmtRp(n) {
         if (n == null || isNaN(n)) return "Rp 0";
         var sign = n < 0 ? "-" : "";
@@ -924,7 +1044,7 @@
         );
       }
 
-      // ============ FORMAT HARGA SATUAN — BILANGAN BULAT + Rp ============
+      // ============ FORMAT HARGA SATUAN ============
       function fmtCurIn(inp) {
         var r = inp.value.replace(/[^\d-]/g, "");
         if (r === "" || r === "-") {
@@ -960,7 +1080,7 @@
         recalc();
       }
 
-      // ============ FORMAT CLAIM — DESIMAL + PEMISAH RIBUAN + Rp ============
+      // ============ FORMAT CLAIM ============
       function fmtClaimIn(inp) {
         var raw = inp.value.replace(/[^\d,\-]/g, "");
         var neg = raw.startsWith("-");
@@ -1077,7 +1197,7 @@
         row.querySelector(".rtotal").textContent = fmtRp(qty * prc);
       }
 
-      // ============ PERHITUNGAN ============
+      // ============ PERHITUNGAN (DENGAN DISKON & DPP) ============
       function recalc() {
         var sub = 0;
         var rows = document.querySelectorAll("#itemBody tr");
@@ -1089,24 +1209,57 @@
             ) || 0;
           sub += q * p;
         }
+
+        // Diskon
+        var discAmt = 0;
+        var discV =
+          parseFloat(
+            document.getElementById("fDiscount").value.replace(/[^\d.-]/g, ""),
+          ) || 0;
+        discAmt = taxModes.discount === "percent" ? (sub * discV) / 100 : discV;
+        var baseAfterDisc = sub - discAmt;
+
+        // Hitung Nilai Lain / DPP (11/12)
+        var nilaiLain = Math.round(((baseAfterDisc * 11) / 12) * 100) / 100;
+
         var ppnAmt = 0;
         var ppnV =
           parseFloat(
             document.getElementById("fPPN").value.replace(/[^\d.-]/g, ""),
           ) || 0;
-        ppnAmt = taxModes.ppn === "percent" ? (sub * ppnV) / 100 : ppnV;
+        ppnAmt = taxModes.ppn === "percent" ? (nilaiLain * ppnV) / 100 : ppnV;
+
         var pphAmt = 0;
         var pphV =
           parseFloat(
             document.getElementById("fPPH").value.replace(/[^\d.-]/g, ""),
           ) || 0;
-        pphAmt = taxModes.pph === "percent" ? (sub * pphV) / 100 : pphV;
-        var grand = sub + ppnAmt - pphAmt;
+        pphAmt =
+          taxModes.pph === "percent" ? (baseAfterDisc * pphV) / 100 : pphV;
+
+        var grand = baseAfterDisc + ppnAmt - pphAmt;
+
         document.getElementById("dSub").textContent = fmtRp(sub);
+        document.getElementById("dDisc").textContent = "- " + fmtRp(discAmt);
+        document.getElementById("dNilaiLain").textContent = fmtRp(nilaiLain);
+
         document.getElementById("bkSub").textContent = fmtRp(sub);
+        document.getElementById("bkDiscLabel").textContent =
+          taxModes.discount === "percent"
+            ? "Diskon (" + discV + "%)"
+            : "Diskon (Rp)";
+        document.getElementById("bkDiscVal").textContent =
+          "- " + fmtRp(discAmt);
+        document.getElementById("bkBaseDisc").textContent =
+          fmtRp(baseAfterDisc);
+        document.getElementById("bkNilaiLain").textContent = fmtRp(nilaiLain);
+
         document.getElementById("bkPpnLabel").textContent =
-          taxModes.ppn === "percent" ? "PPN (" + ppnV + "%)" : "PPN (Rp)";
+          taxModes.ppn === "percent"
+            ? "PPN (" + ppnV + "% x Nilai Lain)"
+            : "PPN (Rp)";
         document.getElementById("bkPpnVal").textContent = "+ " + fmtRp(ppnAmt);
+
         document.getElementById("bkPphLabel").textContent =
           taxModes.pph === "percent" ? "PPH (" + pphV + "%)" : "PPH (Rp)";
         document.getElementById("bkPphVal").textContent = "- " + fmtRp(pphAmt);
@@ -1196,8 +1349,6 @@
               "Item " + (j + 1) + ": Harga satuan tidak boleh kosong atau 0.",
             );
         }
-        var gt = parseCur(document.getElementById("dGrand").textContent);
-        if (gt < 0) errs.push("Total Pesanan tidak boleh negatif.");
         return errs;
       }
 
@@ -1227,17 +1378,34 @@
           }
           var sub = 0;
           for (var k = 0; k < items.length; k++) sub += items[k].total;
+
+          var discV =
+            parseFloat(
+              document
+                .getElementById("fDiscount")
+                .value.replace(/[^\d.-]/g, ""),
+            ) || 0;
+          var discAmt =
+            taxModes.discount === "percent" ? (sub * discV) / 100 : discV;
+          var baseAfterDisc = sub - discAmt;
+
+          var nilaiLain = Math.round(((baseAfterDisc * 11) / 12) * 100) / 100;
+
           var ppnV =
             parseFloat(
               document.getElementById("fPPN").value.replace(/[^\d.-]/g, ""),
             ) || 0;
-          var ppnAmt = taxModes.ppn === "percent" ? (sub * ppnV) / 100 : ppnV;
+          var ppnAmt =
+            taxModes.ppn === "percent" ? (nilaiLain * ppnV) / 100 : ppnV;
+
           var pphV =
             parseFloat(
               document.getElementById("fPPH").value.replace(/[^\d.-]/g, ""),
             ) || 0;
-          var pphAmt = taxModes.pph === "percent" ? (sub * pphV) / 100 : pphV;
-          var grand = sub + ppnAmt - pphAmt;
+          var pphAmt =
+            taxModes.pph === "percent" ? (baseAfterDisc * pphV) / 100 : pphV;
+
+          var grand = baseAfterDisc + ppnAmt - pphAmt;
           var existing = null;
           if (editingId) {
             for (var m = 0; m < poList.length; m++) {
@@ -1257,6 +1425,11 @@
             endDate: document.getElementById("fEnd").value,
             items: items,
             subTotal: sub,
+            discountMode: taxModes.discount,
+            discountValue: discV,
+            discountAmount: discAmt,
+            baseAfterDiscount: baseAfterDisc,
+            nilaiLain: nilaiLain,
             ppnMode: taxModes.ppn,
             ppnValue: ppnV,
             ppnAmount: ppnAmt,
@@ -1307,14 +1480,22 @@
         document.getElementById("fEnd").value = "";
         document.getElementById("itemBody").innerHTML = "";
         document.getElementById("noItemMsg").classList.remove("hidden");
+
+        taxModes.discount = "percent";
+        updateSegBtns("discount");
+        document.getElementById("discountSfx").textContent = "%";
+        document.getElementById("fDiscount").value = "0";
+
         taxModes.ppn = "percent";
-        taxModes.pph = "percent";
         updateSegBtns("ppn");
         document.getElementById("ppnSfx").textContent = "%";
-        document.getElementById("fPPN").value = "11";
+        document.getElementById("fPPN").value = "12";
+
+        taxModes.pph = "percent";
         updateSegBtns("pph");
         document.getElementById("pphSfx").textContent = "%";
-        document.getElementById("fPPH").value = "0";
+        document.getElementById("fPPH").value = "2";
+
         document.getElementById("fClaimDate").value = "";
         document.getElementById("fClaimNom").value = "";
         document.getElementById("fClaimStat").value = "Belum Claim";
@@ -1354,18 +1535,28 @@
         if (po.items && po.items.length) {
           for (var j = 0; j < po.items.length; j++) addRow(po.items[j]);
         } else addRow();
+
+        taxModes.discount = po.discountMode || "percent";
+        updateSegBtns("discount");
+        document.getElementById("discountSfx").textContent =
+          taxModes.discount === "percent" ? "%" : "Rp";
+        document.getElementById("fDiscount").value =
+          po.discountValue != null ? po.discountValue : 0;
+
         taxModes.ppn = po.ppnMode || "percent";
         updateSegBtns("ppn");
         document.getElementById("ppnSfx").textContent =
           taxModes.ppn === "percent" ? "%" : "Rp";
         document.getElementById("fPPN").value =
-          po.ppnValue != null ? po.ppnValue : 11;
+          po.ppnValue != null ? po.ppnValue : 12;
+
         taxModes.pph = po.pphMode || "percent";
         updateSegBtns("pph");
         document.getElementById("pphSfx").textContent =
           taxModes.pph === "percent" ? "%" : "Rp";
         document.getElementById("fPPH").value =
-          po.pphValue != null ? po.pphValue : 0;
+          po.pphValue != null ? po.pphValue : 2;
+
         document.getElementById("fClaimDate").value = po.claimDate || "";
         document.getElementById("fClaimNom").value = po.claimNominal
           ? fmtRp(po.claimNominal)
@@ -1466,6 +1657,14 @@
           its +
           '</tbody></table><hr class="border-stone-200"><div class="space-y-1.5 text-sm max-w-xs ml-auto"><div class="flex justify-between"><span class="text-gray-500">Sub Total</span><span class="font-semibold">' +
           fmtRp(po.subTotal) +
+          '</span></div><div class="flex justify-between"><span class="text-purple-700">Diskon ' +
+          (po.discountMode === "percent" ? "(" + po.discountValue + "%)" : "") +
+          '</span><span class="font-semibold text-purple-700">- ' +
+          fmtRp(po.discountAmount || 0) +
+          '</span></div><div class="flex justify-between border-b border-dashed pb-1"><span class="text-gray-500 font-semibold">Base Setelah Diskon</span><span class="font-bold text-gray-900">' +
+          fmtRp(po.baseAfterDiscount || po.subTotal) +
+          '</span></div><div class="flex justify-between"><span class="text-blue-700">Nilai Lain (11/12)</span><span class="font-semibold text-blue-700">' +
+          fmtRp(po.nilaiLain || 0) +
           '</span></div><div class="flex justify-between"><span class="text-green-700">PPN ' +
           (po.ppnMode === "percent" ? "(" + po.ppnValue + "%)" : "") +
           '</span><span class="font-semibold text-green-700">+ ' +
@@ -1503,14 +1702,21 @@
         document.body.insertAdjacentHTML("beforeend", h);
       }
 
-      // ============ RENDER DAFTAR ============
-      function renderList() {
+      // ============ HELPER: FILTER DATA ============
+      function getFilteredPOs() {
         var src = document
           .getElementById("srcInput")
           .value.toLowerCase()
           .trim();
         var fPay = document.getElementById("fltPay").value;
         var fCl = document.getElementById("fltClaim").value;
+        var fDateFrom = document.getElementById("fltDateFrom").value;
+        var fDateTo = document.getElementById("fltDateTo").value;
+        var fReceiver = document
+          .getElementById("fltReceiver")
+          .value.toLowerCase()
+          .trim();
+
         var filtered = [];
         for (var i = 0; i < poList.length; i++) {
           var po = poList[i];
@@ -1521,11 +1727,26 @@
             (po.receiverName || "").toLowerCase().indexOf(src) !== -1;
           var mp = fPay === "all" || po.paymentStatus === fPay;
           var mc = fCl === "all" || po.claimStatus === fCl;
-          if (ms && mp && mc) filtered.push(po);
+
+          var dateOk = true;
+          if (fDateFrom && po.releaseDate < fDateFrom) dateOk = false;
+          if (fDateTo && po.releaseDate > fDateTo) dateOk = false;
+
+          var receiverOk =
+            !fReceiver ||
+            (po.receiverName || "").toLowerCase().indexOf(fReceiver) !== -1;
+
+          if (ms && mp && mc && dateOk && receiverOk) filtered.push(po);
         }
         filtered.sort(function (a, b) {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
+        return filtered;
+      }
+
+      // ============ RENDER DAFTAR ============
+      function renderList() {
+        var filtered = getFilteredPOs();
         var tbody = document.getElementById("listBody");
         var empty = document.getElementById("emptyList");
         document.getElementById("poCount").textContent = poList.length;
@@ -1599,20 +1820,52 @@
         document.getElementById("smPd").textContent = paid;
       }
 
-      // ============ EXPORT EXCEL ============
+      // ============ HELPER: TRIGGER DOWNLOAD BLOB DI CHROME ============
+      function triggerDownload(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 250);
+      }
+
+      // ============ EXPORT EXCEL MENGGUNAKAN SHEETJS ============
       function expExcel() {
-        if (!poList.length) {
-          toast("Tidak ada data untuk diekspor.", "error");
+        var dataToExport = getFilteredPOs();
+        if (!dataToExport.length) {
+          toast("Tidak ada data sesuai filter untuk diekspor.", "error");
           return;
         }
+
+        // Cek apakah library SheetJS sudah dimuat
+        if (typeof XLSX === "undefined") {
+          toast(
+            "Library SheetJS belum dimuat. Refresh halaman dan coba lagi.",
+            "error",
+          );
+          return;
+        }
+
         try {
-          var hdr = [
+          var wb = XLSX.utils.book_new();
+
+          // ---- Sheet 1: Ringkasan PO ----
+          var summaryHeader = [
             "No",
             "Nama Klien",
             "Perusahaan Penerima",
             "Nomor PO",
             "Tanggal Rilis",
             "Sub Total",
+            "Diskon",
+            "Base Setelah Diskon",
+            "Nilai Lain (11/12)",
             "PPN",
             "PPH",
             "Total Pesanan",
@@ -1625,16 +1878,20 @@
             "Tgl Terbayar",
             "Keterangan",
           ];
-          var csv = "\uFEFF" + hdr.join(";") + "\n";
-          for (var i = 0; i < poList.length; i++) {
-            var p = poList[i];
-            var row = [
+          var wsData = [summaryHeader];
+
+          for (var i = 0; i < dataToExport.length; i++) {
+            var p = dataToExport[i];
+            wsData.push([
               i + 1,
               p.clientName,
               p.receiverName || "",
               p.poNumber,
               p.releaseDate || "",
               p.subTotal,
+              p.discountAmount || 0,
+              p.baseAfterDiscount || p.subTotal,
+              p.nilaiLain || 0,
               p.ppnAmount,
               p.pphAmount,
               p.grandTotal,
@@ -1646,43 +1903,113 @@
               p.paymentStatus,
               p.paymentDate || "",
               p.paymentNote || "",
-            ];
-            csv +=
-              row
-                .map(function (c) {
-                  return '"' + String(c).replace(/"/g, '""') + '"';
-                })
-                .join(";") + "\n";
+            ]);
           }
-          var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download =
-            "Daftar_PO_" + new Date().toISOString().slice(0, 10) + ".csv";
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(function () {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }, 100);
-          toast("File CSV berhasil diunduh!", "success");
+
+          var ws = XLSX.utils.aoa_to_sheet(wsData);
+
+          // Atur lebar kolom
+          var wscols = [
+            { wch: 5 },
+            { wch: 25 },
+            { wch: 25 },
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 22 },
+            { wch: 20 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 18 },
+            { wch: 15 },
+            { wch: 18 },
+            { wch: 15 },
+            { wch: 30 },
+          ];
+          ws["!cols"] = wscols;
+
+          XLSX.utils.book_append_sheet(wb, ws, "Daftar PO");
+
+          // ---- Sheet 2: Detail Item per PO ----
+          var detailHeader = [
+            "Nomor PO",
+            "Nama Klien",
+            "No Item",
+            "Keterangan Item",
+            "Jumlah",
+            "Harga Satuan",
+            "Total Harga",
+          ];
+          var detailData = [detailHeader];
+
+          for (var d = 0; d < dataToExport.length; d++) {
+            var po = dataToExport[d];
+            if (po.items && po.items.length) {
+              for (var it = 0; it < po.items.length; it++) {
+                detailData.push([
+                  po.poNumber,
+                  po.clientName,
+                  it + 1,
+                  po.items[it].description,
+                  po.items[it].quantity,
+                  po.items[it].unitPrice,
+                  po.items[it].total,
+                ]);
+              }
+            }
+          }
+
+          var ws2 = XLSX.utils.aoa_to_sheet(detailData);
+          var wscols2 = [
+            { wch: 20 },
+            { wch: 25 },
+            { wch: 8 },
+            { wch: 35 },
+            { wch: 12 },
+            { wch: 18 },
+            { wch: 18 },
+          ];
+          ws2["!cols"] = wscols2;
+          XLSX.utils.book_append_sheet(wb, ws2, "Detail Item");
+
+          // ---- Tulis workbook ke ArrayBuffer, lalu buat Blob ----
+          var wbout = XLSX.write(wb, {
+            bookType: "xlsx",
+            type: "array",
+          });
+          var blob = new Blob([wbout], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+
+          var filename =
+            "Daftar_PO_" + new Date().toISOString().slice(0, 10) + ".xlsx";
+
+          // Gunakan download via anchor + Blob URL (kompatibel Chrome)
+          triggerDownload(blob, filename);
+
+          toast("File Excel (.xlsx) berhasil diunduh!", "success");
         } catch (e) {
           toast("Gagal export Excel: " + e.message, "error");
+          console.error("Export Excel error:", e);
         }
       }
 
-      // ============ EXPORT PDF DAFTAR PO ============
+      // ============ EXPORT PDF DAFTAR PO (FILTERED) ============
       function expPDFAll() {
-        if (!poList.length) {
-          toast("Tidak ada data.", "error");
+        var dataToExport = getFilteredPOs();
+        if (!dataToExport.length) {
+          toast("Tidak ada data sesuai filter.", "error");
           return;
         }
         try {
           var rows = "";
-          for (var i = 0; i < poList.length; i++) {
-            var p = poList[i];
+          for (var i = 0; i < dataToExport.length; i++) {
+            var p = dataToExport[i];
             rows +=
               '<tr style="border-bottom:1px solid #e5e7eb"><td style="padding:6px 8px;text-align:center">' +
               (i + 1) +
@@ -1696,7 +2023,17 @@
               fmtDate(p.releaseDate) +
               '</td><td style="padding:6px 8px;text-align:right">' +
               fmtRp(p.subTotal) +
+              '</td><td style="padding:6px 8px;text-align:right;color:#7c3aed">- ' +
+              fmtRp(p.discountAmount || 0) +
               '</td><td style="padding:6px 8px;text-align:right">' +
+              fmtRp(p.baseAfterDiscount || p.subTotal) +
+              '</td><td style="padding:6px 8px;text-align:right">' +
+              fmtRp(p.nilaiLain || 0) +
+              '</td><td style="padding:6px 8px;text-align:right">' +
+              fmtRp(p.ppnAmount) +
+              '</td><td style="padding:6px 8px;text-align:right">' +
+              fmtRp(p.pphAmount) +
+              '</td><td style="padding:6px 8px;text-align:right;font-weight:700">' +
               fmtRp(p.grandTotal) +
               '</td><td style="padding:6px 8px;text-align:center">' +
               fmtDate(p.startDate) +
@@ -1711,18 +2048,18 @@
               "</td></tr>";
           }
           var html =
-            '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Daftar Purchase Order</title><style>body{font-family:\'Segoe UI\',sans-serif;color:#1c1917;margin:30px;font-size:12px}h1{font-size:20px;margin:0 0 4px}.hbar{background:#14532d;color:#fff;padding:14px 18px;border-radius:6px;margin-bottom:16px}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#f5f5f4;padding:6px 8px;text-align:left;text-transform:uppercase;letter-spacing:.3px;font-size:9px}@media print{body{margin:10px}}</style></head><body><div class="hbar"><h1>DAFTAR PURCHASE ORDER</h1><div style="opacity:.8;font-size:12px">Total: ' +
-            poList.length +
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Daftar Purchase Order</title><style>body{font-family:\'Segoe UI\',sans-serif;color:#1c1917;margin:30px;font-size:12px}h1{font-size:20px;margin:0 0 4px}.hbar{background:#14532d;color:#fff;padding:14px 18px;border-radius:6px;margin-bottom:16px}table{width:100%;border-collapse:collapse;font-size:10px}th{background:#f5f5f4;padding:6px 8px;text-align:left;text-transform:uppercase;letter-spacing:.3px;font-size:9px}@media print{body{margin:10px}}</style></head><body><div class="hbar"><h1>DAFTAR PURCHASE ORDER</h1><div style="opacity:.8;font-size:12px">Total: ' +
+            dataToExport.length +
             " PO | Dicetak: " +
             new Date().toLocaleDateString("id-ID", {
               day: "2-digit",
               month: "long",
               year: "numeric",
             }) +
-            '</div></div><table><thead><tr><th style="width:30px;text-align:center">#</th><th>Klien</th><th>Penerima</th><th>No. PO</th><th style="text-align:center">Tgl Rilis</th><th style="text-align:right">Sub Total</th><th style="text-align:right">Total</th><th style="text-align:center">Awal</th><th style="text-align:center">Selesai</th><th style="text-align:right">Nom. Claim</th><th style="text-align:center">Claim</th><th style="text-align:center">Bayar</th></tr></thead><tbody>' +
+            '</div></div><table><thead><tr><th style="width:30px;text-align:center">#</th><th>Klien</th><th>Penerima</th><th>No. PO</th><th style="text-align:center">Tgl Rilis</th><th style="text-align:right">Sub Total</th><th style="text-align:right">Diskon</th><th style="text-align:right">Base</th><th style="text-align:right">Nilai Lain</th><th style="text-align:right">PPN</th><th style="text-align:right">PPH</th><th style="text-align:right">Total</th><th style="text-align:center">Awal</th><th style="text-align:center">Selesai</th><th style="text-align:right">Nom. Claim</th><th style="text-align:center">Claim</th><th style="text-align:center">Bayar</th></tr></thead><tbody>' +
             rows +
             '</tbody></table><div style="margin-top:30px;text-align:center;color:#a8a29e;font-size:10px">Purchase Order System</div></body></html>';
-          var w = window.open("", "_blank", "width=1000,height=700");
+          var w = window.open("", "_blank", "width=1100,height=700");
           w.document.write(html);
           w.document.close();
           setTimeout(function () {
@@ -1781,6 +2118,16 @@
               its +
               '</tbody></table><hr><div style="max-width:320px;margin-left:auto"><div class="sr"><span>Sub Total</span><span>' +
               fmtRp(po.subTotal) +
+              '</span></div><div class="sr"><span style="color:#7c3aed">Diskon ' +
+              (po.discountMode === "percent"
+                ? "(" + po.discountValue + "%)"
+                : "") +
+              '</span><span style="color:#7c3aed">- ' +
+              fmtRp(po.discountAmount || 0) +
+              '</span></div><div class="sr" style="border-bottom:1px dashed #a8a29e"><span style="font-weight:600">Base Setelah Diskon</span><span style="font-weight:700">' +
+              fmtRp(po.baseAfterDiscount || po.subTotal) +
+              '</span></div><div class="sr"><span style="color:#2563eb">Nilai Lain (11/12)</span><span style="color:#2563eb">' +
+              fmtRp(po.nilaiLain || 0) +
               '</span></div><div class="sr"><span style="color:#16a34a">PPN ' +
               (po.ppnMode === "percent" ? "(" + po.ppnValue + "%)" : "") +
               '</span><span style="color:#16a34a">+ ' +
