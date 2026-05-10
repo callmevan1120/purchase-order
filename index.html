@@ -1,0 +1,1912 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Purchase Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: { fontFamily: { sans: ["Plus Jakarta Sans", "sans-serif"] } },
+        },
+      };
+    </script>
+    <style>
+      :root {
+        --bg: #f5f1eb;
+        --primary: #14532d;
+        --primary-mid: #166534;
+        --accent: #b45309;
+        --text: #1c1917;
+        --muted: #78716c;
+        --border: #d6d3d1;
+      }
+      body {
+        background: var(--bg);
+      }
+      .bg-dots {
+        background-image: radial-gradient(
+          circle at 1px 1px,
+          rgba(20, 83, 45, 0.03) 1px,
+          transparent 0
+        );
+        background-size: 24px 24px;
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .anim-up {
+        animation: slideUp 0.4s ease-out both;
+      }
+      .anim-up2 {
+        animation: slideUp 0.4s 0.08s ease-out both;
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateX(110%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes toastOut {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(110%);
+        }
+      }
+      .toast-in {
+        animation: toastIn 0.3s ease-out both;
+      }
+      .toast-out {
+        animation: toastOut 0.25s ease-in both;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: -200% center;
+        }
+        100% {
+          background-position: 200% center;
+        }
+      }
+      .shimmer-gold {
+        background: linear-gradient(
+          90deg,
+          #b45309,
+          #f59e0b,
+          #fbbf24,
+          #f59e0b,
+          #b45309
+        );
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3.5s linear infinite;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.12);
+        border-color: var(--primary-mid) !important;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #a8a29e;
+        border-radius: 3px;
+      }
+      @keyframes pulseG {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.35);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+        }
+      }
+      .badge-pulse {
+        animation: pulseG 2s infinite;
+      }
+      .po-row {
+        transition: background 0.15s;
+      }
+      .po-row:hover {
+        background: #faf8f5;
+      }
+      .seg-btn {
+        transition: all 0.2s;
+        cursor: pointer;
+        user-select: none;
+      }
+      .seg-btn.on {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+      }
+      .card-lift {
+        transition: box-shadow 0.3s;
+      }
+      .card-lift:hover {
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+      }
+      .sec-bar {
+        position: relative;
+        padding-left: 14px;
+      }
+      .sec-bar::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 2px;
+        bottom: 2px;
+        width: 4px;
+        border-radius: 2px;
+        background: var(--primary);
+      }
+      .tbl-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .glow-box {
+        box-shadow:
+          0 0 36px rgba(180, 83, 9, 0.06),
+          0 4px 20px rgba(0, 0, 0, 0.04);
+      }
+      @keyframes rowIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .row-anim {
+        animation: rowIn 0.25s ease-out both;
+      }
+      @media print {
+        body {
+          background: #fff !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-dots min-h-screen font-sans text-[var(--text)]">
+    <div
+      id="toastBox"
+      class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none"
+    ></div>
+
+    <div
+      id="delModal"
+      class="fixed inset-0 z-[9998] hidden items-center justify-center bg-black/40 backdrop-blur-sm"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 anim-up">
+        <div class="flex items-center gap-3 mb-4">
+          <div
+            class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center"
+          >
+            <i class="fa-solid fa-triangle-exclamation text-red-600"></i>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus</h3>
+        </div>
+        <p class="text-gray-600 mb-6 text-sm" id="delMsg"></p>
+        <div class="flex gap-3 justify-end">
+          <button
+            onclick="closeDel()"
+            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+          >
+            Batal
+          </button>
+          <button
+            onclick="confirmDel()"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition text-sm"
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <header
+      class="sticky top-0 z-50 no-print"
+      style="background: linear-gradient(135deg, #0f2b1a, #14532d 50%, #1a6b3a)"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center border border-white/10"
+          >
+            <i class="fa-solid fa-file-invoice text-amber-400 text-lg"></i>
+          </div>
+          <div>
+            <h1
+              class="text-white font-extrabold text-xl tracking-tight leading-tight"
+            >
+              Purchase Order System
+            </h1>
+            <p class="text-green-300/70 text-xs font-medium">
+              Manajemen & Pencatatan PO Klien
+            </p>
+          </div>
+        </div>
+        <span
+          class="hidden sm:inline text-green-200/60 text-xs"
+          id="hdrClock"
+        ></span>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <section id="formSection" class="anim-up">
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden card-lift"
+        >
+          <div
+            class="px-6 py-4 flex items-center justify-between"
+            style="background: linear-gradient(135deg, #14532d, #1a6b3a)"
+          >
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-plus-circle text-amber-400"></i>
+              <h2 class="text-white font-bold text-base" id="formTitle">
+                Input Purchase Order Baru
+              </h2>
+            </div>
+            <button
+              onclick="togForm()"
+              id="togBtn"
+              class="text-white/60 hover:text-white transition"
+            >
+              <i class="fa-solid fa-chevron-up text-sm"></i>
+            </button>
+          </div>
+          <div id="formBody" class="p-5 sm:p-6 space-y-5">
+            <!-- Data Utama -->
+            <div>
+              <h3 class="sec-bar font-bold text-gray-800 mb-3 text-sm">
+                Data Utama PO
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1"
+                    >Nama Perusahaan Klien
+                    <span class="text-red-500">*</span></label
+                  ><input
+                    type="text"
+                    id="fClient"
+                    placeholder="PT Maju Jaya"
+                    class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1"
+                    >Nama Perusahaan Penerima
+                    <span class="text-red-500">*</span></label
+                  ><input
+                    type="text"
+                    id="fReceiver"
+                    placeholder="PT Sejahtera Abadi"
+                    class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1"
+                    >Nomor Purchase Order
+                    <span class="text-red-500">*</span></label
+                  ><input
+                    type="text"
+                    id="fPONum"
+                    placeholder="PO-2024-001"
+                    class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1"
+                    >Tanggal Rilis PO</label
+                  ><input
+                    type="date"
+                    id="fReleaseDate"
+                    class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1"
+                    >Tgl Awal Proses</label
+                  ><input
+                    type="date"
+                    id="fStart"
+                    class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 mb-1"
+                    >Tgl Selesai Proses</label
+                  ><input
+                    type="date"
+                    id="fEnd"
+                    class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <hr class="border-stone-200" />
+
+            <!-- Detail Item -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="sec-bar font-bold text-gray-800 text-sm">
+                  Detail Item PO
+                </h3>
+                <button
+                  type="button"
+                  onclick="addRow()"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-800 text-white text-xs font-bold hover:bg-green-900 transition shadow-sm active:scale-95"
+                >
+                  <i class="fa-solid fa-plus text-[10px]"></i> Tambah Item
+                </button>
+              </div>
+              <div class="tbl-wrap">
+                <table class="w-full text-sm" id="itemTable">
+                  <thead>
+                    <tr
+                      class="bg-stone-100 text-gray-500 text-[10px] uppercase tracking-widest"
+                    >
+                      <th
+                        class="px-3 py-2 text-left font-semibold rounded-l-lg w-8"
+                      >
+                        #
+                      </th>
+                      <th class="px-3 py-2 text-left font-semibold">
+                        Keterangan Item
+                      </th>
+                      <th class="px-3 py-2 text-right font-semibold w-28">
+                        Jumlah
+                      </th>
+                      <th class="px-3 py-2 text-right font-semibold w-40">
+                        Harga Satuan
+                      </th>
+                      <th class="px-3 py-2 text-right font-semibold w-40">
+                        Total Harga
+                      </th>
+                      <th
+                        class="px-3 py-2 text-center font-semibold rounded-r-lg w-14"
+                      >
+                        Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="itemBody"></tbody>
+                </table>
+              </div>
+              <div id="noItemMsg" class="hidden text-center py-8 text-gray-400">
+                <i class="fa-solid fa-box-open text-2xl mb-2 block"></i>
+                <p class="text-xs">
+                  Belum ada item. Klik "Tambah Item" untuk memulai.
+                </p>
+              </div>
+            </div>
+
+            <hr class="border-stone-200" />
+
+            <!-- Perhitungan -->
+            <div>
+              <h3 class="sec-bar font-bold text-gray-800 mb-3 text-sm">
+                Perhitungan Otomatis
+              </h3>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="space-y-3">
+                  <div
+                    class="flex items-center justify-between bg-stone-50 rounded-lg px-4 py-3 border border-stone-100"
+                  >
+                    <span class="font-semibold text-gray-700 text-sm"
+                      >Sub Total</span
+                    >
+                    <span class="font-bold text-gray-900" id="dSub">Rp 0</span>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >PPN</label
+                    >
+                    <div class="flex gap-2 items-center">
+                      <div
+                        class="flex rounded-lg overflow-hidden border border-stone-300 shrink-0"
+                      >
+                        <button
+                          type="button"
+                          class="seg-btn on px-3 py-2 text-xs font-bold"
+                          data-tax="ppn"
+                          data-mode="percent"
+                          onclick="setTaxM('ppn', 'percent')"
+                        >
+                          %
+                        </button>
+                        <button
+                          type="button"
+                          class="seg-btn px-3 py-2 text-xs font-bold bg-stone-50 text-gray-500"
+                          data-tax="ppn"
+                          data-mode="nominal"
+                          onclick="setTaxM('ppn', 'nominal')"
+                        >
+                          Rp
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        id="fPPN"
+                        inputmode="decimal"
+                        value="11"
+                        class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition text-right"
+                        oninput="recalc()"
+                        onblur="taxBl(this)"
+                      />
+                      <span
+                        class="text-xs text-gray-500 font-medium w-5 shrink-0"
+                        id="ppnSfx"
+                        >%</span
+                      >
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >PPH</label
+                    >
+                    <div class="flex gap-2 items-center">
+                      <div
+                        class="flex rounded-lg overflow-hidden border border-stone-300 shrink-0"
+                      >
+                        <button
+                          type="button"
+                          class="seg-btn on px-3 py-2 text-xs font-bold"
+                          data-tax="pph"
+                          data-mode="percent"
+                          onclick="setTaxM('pph', 'percent')"
+                        >
+                          %
+                        </button>
+                        <button
+                          type="button"
+                          class="seg-btn px-3 py-2 text-xs font-bold bg-stone-50 text-gray-500"
+                          data-tax="pph"
+                          data-mode="nominal"
+                          onclick="setTaxM('pph', 'nominal')"
+                        >
+                          Rp
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        id="fPPH"
+                        inputmode="decimal"
+                        value="0"
+                        class="flex-1 min-w-0 px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition text-right"
+                        oninput="recalc()"
+                        onblur="taxBl(this)"
+                      />
+                      <span
+                        class="text-xs text-gray-500 font-medium w-5 shrink-0"
+                        id="pphSfx"
+                        >%</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="mt-5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-200 rounded-xl p-5 glow-box"
+              >
+                <p
+                  class="text-xs font-bold text-amber-800 mb-3 uppercase tracking-wider"
+                >
+                  Rincian Perhitungan
+                </p>
+                <div class="space-y-2">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Sub Total</span
+                    ><span class="font-semibold text-gray-900" id="bkSub"
+                      >Rp 0</span
+                    >
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-green-700" id="bkPpnLabel">PPN (11%)</span
+                    ><span class="font-semibold text-green-700" id="bkPpnVal"
+                      >+ Rp 0</span
+                    >
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-red-600" id="bkPphLabel">PPH (0%)</span
+                    ><span class="font-semibold text-red-600" id="bkPphVal"
+                      >- Rp 0</span
+                    >
+                  </div>
+                  <hr class="border-amber-300 my-1" />
+                  <div class="flex justify-between items-center pt-1">
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shadow"
+                      >
+                        <i class="fa-solid fa-receipt text-white text-xs"></i>
+                      </div>
+                      <span class="font-bold text-amber-800 text-sm"
+                        >Total Pesanan</span
+                      >
+                    </div>
+                    <span
+                      class="text-2xl sm:text-3xl font-extrabold shimmer-gold"
+                      id="dGrand"
+                      >Rp 0</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr class="border-stone-200" />
+
+            <!-- Claim & Pembayaran -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div>
+                <h3 class="sec-bar font-bold text-gray-800 mb-3 text-sm">
+                  Claim
+                </h3>
+                <div class="space-y-3">
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Tanggal Claim</label
+                    ><input
+                      type="date"
+                      id="fClaimDate"
+                      class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Nominal Claim</label
+                    >
+                    <div class="relative">
+                      <span
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium"
+                        >Rp</span
+                      >
+                      <input
+                        type="text"
+                        id="fClaimNom"
+                        inputmode="decimal"
+                        placeholder="0"
+                        class="w-full pl-9 pr-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition text-right"
+                        oninput="fmtClaimIn(this)"
+                        onblur="fmtClaimBl(this)"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Status Claim</label
+                    ><select
+                      id="fClaimStat"
+                      class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                    >
+                      <option value="Belum Claim">Belum Claim</option>
+                      <option value="Sudah Claim">Sudah Claim</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 class="sec-bar font-bold text-gray-800 mb-3 text-sm">
+                  Status Pembayaran
+                </h3>
+                <div class="space-y-3">
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Status Pembayaran</label
+                    ><select
+                      id="fPayStat"
+                      class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                      onchange="togPay()"
+                    >
+                      <option value="Belum Terbayar">Belum Terbayar</option>
+                      <option value="Terbayar">Terbayar</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Tanggal Terbayar</label
+                    ><input
+                      type="date"
+                      id="fPayDate"
+                      disabled
+                      class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm transition disabled:bg-stone-100 disabled:cursor-not-allowed disabled:text-stone-400"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-semibold text-gray-600 mb-1"
+                      >Keterangan Selesai Terbayar</label
+                    ><textarea
+                      id="fPayNote"
+                      rows="2"
+                      placeholder="Catatan pembayaran..."
+                      disabled
+                      class="w-full px-3 py-2.5 rounded-lg border border-stone-300 text-sm transition resize-none disabled:bg-stone-100 disabled:cursor-not-allowed disabled:text-stone-400"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                type="button"
+                onclick="savePO()"
+                class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-green-800 text-white font-bold text-sm hover:bg-green-900 transition shadow-md hover:shadow-lg active:scale-[0.98]"
+              >
+                <i class="fa-solid fa-floppy-disk"></i
+                ><span id="saveLabel">Simpan PO</span>
+              </button>
+              <button
+                type="button"
+                onclick="resetForm()"
+                class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-stone-300 text-gray-600 font-bold text-sm hover:bg-stone-50 transition active:scale-[0.98]"
+              >
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DAFTAR PO -->
+      <section id="listSection" class="anim-up2">
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden card-lift"
+        >
+          <div
+            class="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+            style="background: linear-gradient(135deg, #292524, #44403c)"
+          >
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-list-check text-amber-400"></i>
+              <h2 class="text-white font-bold text-base">
+                Daftar Purchase Order
+              </h2>
+              <span
+                class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                id="poCount"
+                >0</span
+              >
+            </div>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                onclick="expExcel()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition"
+              >
+                <i class="fa-solid fa-file-excel"></i> Excel
+              </button>
+              <button
+                type="button"
+                onclick="expPDFAll()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+              >
+                <i class="fa-solid fa-file-pdf"></i> PDF
+              </button>
+            </div>
+          </div>
+          <div class="px-6 py-3 border-b border-stone-200 bg-stone-50/60">
+            <div class="flex flex-col sm:flex-row gap-3">
+              <div class="relative flex-1">
+                <i
+                  class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"
+                ></i
+                ><input
+                  type="text"
+                  id="srcInput"
+                  placeholder="Cari nama klien atau nomor PO..."
+                  class="w-full pl-9 pr-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                  oninput="renderList()"
+                />
+              </div>
+              <select
+                id="fltPay"
+                class="px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                onchange="renderList()"
+              >
+                <option value="all">Semua Pembayaran</option>
+                <option value="Belum Terbayar">Belum Terbayar</option>
+                <option value="Terbayar">Terbayar</option>
+              </select>
+              <select
+                id="fltClaim"
+                class="px-3 py-2.5 rounded-lg border border-stone-300 text-sm bg-white transition"
+                onchange="renderList()"
+              >
+                <option value="all">Semua Claim</option>
+                <option value="Belum Claim">Belum Claim</option>
+                <option value="Sudah Claim">Sudah Claim</option>
+              </select>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table class="w-full text-sm">
+              <thead>
+                <tr
+                  class="bg-stone-100 text-gray-500 text-[10px] uppercase tracking-widest"
+                >
+                  <th class="px-3 py-3 text-left font-semibold">Klien</th>
+                  <th class="px-3 py-3 text-left font-semibold">Penerima</th>
+                  <th class="px-3 py-3 text-left font-semibold">No. PO</th>
+                  <th class="px-3 py-3 text-center font-semibold">Tgl Rilis</th>
+                  <th class="px-3 py-3 text-right font-semibold">Sub Total</th>
+                  <th class="px-3 py-3 text-right font-semibold">Total</th>
+                  <th class="px-3 py-3 text-center font-semibold">Awal</th>
+                  <th class="px-3 py-3 text-center font-semibold">Selesai</th>
+                  <th class="px-3 py-3 text-center font-semibold">Tgl Claim</th>
+                  <th class="px-3 py-3 text-right font-semibold">Nom. Claim</th>
+                  <th class="px-3 py-3 text-center font-semibold">
+                    Pembayaran
+                  </th>
+                  <th class="px-3 py-3 text-center font-semibold">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="listBody"></tbody>
+            </table>
+          </div>
+          <div id="emptyList" class="hidden text-center py-12 text-gray-400">
+            <i class="fa-solid fa-folder-open text-3xl mb-3 block"></i>
+            <p class="font-medium text-sm">Belum ada data Purchase Order</p>
+            <p class="text-xs mt-1">
+              Gunakan form di atas untuk menambahkan PO baru
+            </p>
+          </div>
+          <div
+            id="sumBar"
+            class="hidden border-t border-stone-200 bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4"
+          >
+            <div class="flex flex-wrap items-center gap-6 text-sm">
+              <div>
+                <span class="text-gray-500 text-xs">Total PO</span><br /><span
+                  class="font-bold text-green-800"
+                  id="smCnt"
+                  >0</span
+                >
+              </div>
+              <div>
+                <span class="text-gray-500 text-xs">Total Seluruh</span
+                ><br /><span class="font-bold text-green-800" id="smTot"
+                  >Rp 0</span
+                >
+              </div>
+              <div>
+                <span class="text-gray-500 text-xs">Belum Terbayar</span
+                ><br /><span class="font-bold text-red-600" id="smUn">0</span>
+              </div>
+              <div>
+                <span class="text-gray-500 text-xs">Terbayar</span><br /><span
+                  class="font-bold text-green-600"
+                  id="smPd"
+                  >0</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="no-print text-center py-6 text-gray-400 text-[10px]">
+      <p>Purchase Order System</p>
+    </footer>
+
+    <script>
+      var poList = [];
+      var editingId = null;
+      var rowIdC = 0;
+      var taxModes = { ppn: "percent", pph: "percent" };
+      var delTarget = null;
+
+      // ============ FORMAT RUPIAH — MANUAL, MENDUKUNG DESIMAL ============
+      function fmtRp(n) {
+        if (n == null || isNaN(n)) return "Rp 0";
+        var sign = n < 0 ? "-" : "";
+        var abs = Math.abs(n);
+        var rounded = Math.round(abs * 100) / 100;
+        var str = rounded.toString();
+        var dotIdx = str.indexOf(".");
+        var intStr,
+          decStr = "";
+        if (dotIdx === -1) {
+          intStr = str;
+        } else {
+          intStr = str.substring(0, dotIdx);
+          decStr = str.substring(dotIdx + 1);
+        }
+        var formatted = "";
+        var count = 0;
+        for (var i = intStr.length - 1; i >= 0; i--) {
+          if (count > 0 && count % 3 === 0) formatted = "." + formatted;
+          formatted = intStr[i] + formatted;
+          count++;
+        }
+        if (decStr) {
+          decStr = decStr.padEnd(2, "0");
+          decStr = decStr.replace(/0+$/, "");
+          if (decStr) return sign + "Rp " + formatted + "," + decStr;
+        }
+        return sign + "Rp " + formatted;
+      }
+
+      function parseCur(s) {
+        if (!s) return 0;
+        var cleaned = s
+          .toString()
+          .replace(/Rp/g, "")
+          .replace(/\s/g, "")
+          .replace(/\./g, "")
+          .replace(/,/g, ".");
+        var r = parseFloat(cleaned);
+        return isNaN(r) ? 0 : r;
+      }
+
+      function fmtInt(num) {
+        var s = Math.abs(num).toString();
+        var f = "";
+        var c = 0;
+        for (var i = s.length - 1; i >= 0; i--) {
+          if (c > 0 && c % 3 === 0) f = "." + f;
+          f = s[i] + f;
+          c++;
+        }
+        return (num < 0 ? "-" : "") + f;
+      }
+
+      function fmtDate(d) {
+        if (!d) return "-";
+        return new Date(d).toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+      function esc(t) {
+        var d = document.createElement("div");
+        d.textContent = t || "";
+        return d.innerHTML;
+      }
+      function genId() {
+        return (
+          "po_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6)
+        );
+      }
+
+      // ============ FORMAT HARGA SATUAN — BILANGAN BULAT + Rp ============
+      function fmtCurIn(inp) {
+        var r = inp.value.replace(/[^\d-]/g, "");
+        if (r === "" || r === "-") {
+          inp.value = r;
+          recalc();
+          return;
+        }
+        var neg = r.startsWith("-");
+        var dig = r.replace(/-/g, "");
+        if (!dig) {
+          inp.value = neg ? "-" : "";
+          recalc();
+          return;
+        }
+        inp.value = (neg ? "-" : "") + "Rp " + fmtInt(parseInt(dig));
+        recalc();
+      }
+      function fmtCurBl(inp) {
+        var r = inp.value.replace(/[^\d-]/g, "");
+        if (!r || r === "-" || r === "0") {
+          inp.value = "";
+          recalc();
+          return;
+        }
+        var neg = r.startsWith("-");
+        var dig = r.replace(/-/g, "");
+        if (!dig) {
+          inp.value = "";
+          recalc();
+          return;
+        }
+        inp.value = (neg ? "-" : "") + "Rp " + fmtInt(parseInt(dig));
+        recalc();
+      }
+
+      // ============ FORMAT CLAIM — DESIMAL + PEMISAH RIBUAN + Rp ============
+      function fmtClaimIn(inp) {
+        var raw = inp.value.replace(/[^\d,\-]/g, "");
+        var neg = raw.startsWith("-");
+        raw = raw.replace(/-/g, "");
+        var ci = raw.indexOf(",");
+        var intPart,
+          decPart = "",
+          hasComma = false;
+        if (ci !== -1) {
+          hasComma = true;
+          intPart = raw.substring(0, ci);
+          decPart = raw.substring(ci + 1).replace(/,/g, "");
+        } else {
+          intPart = raw;
+        }
+        var num = parseInt(intPart) || 0;
+        var result = (neg ? "-" : "") + "Rp " + fmtInt(num);
+        if (hasComma) result += "," + decPart;
+        inp.value = result;
+      }
+      function fmtClaimBl(inp) {
+        var raw = inp.value.replace(/[^\d,\-]/g, "");
+        if (!raw || raw === "-" || raw === ",") {
+          inp.value = "";
+          return;
+        }
+        var neg = raw.startsWith("-");
+        raw = raw.replace(/-/g, "");
+        var ci = raw.indexOf(",");
+        var intPart,
+          decPart = "",
+          hasComma = false;
+        if (ci !== -1) {
+          hasComma = true;
+          intPart = raw.substring(0, ci) || "0";
+          decPart = raw.substring(ci + 1).replace(/,/g, "");
+        } else {
+          intPart = raw;
+        }
+        var num = parseInt(intPart) || 0;
+        var result = (neg ? "-" : "") + "Rp " + fmtInt(num);
+        if (hasComma && decPart) {
+          decPart = decPart.replace(/0+$/, "");
+          if (decPart) result += "," + decPart;
+        }
+        inp.value = result;
+      }
+
+      function taxBl(inp) {
+        if (inp.value.trim() === "") inp.value = "0";
+        recalc();
+      }
+
+      // ============ ITEM ROWS ============
+      function addRow(data) {
+        var tbody = document.getElementById("itemBody");
+        document.getElementById("noItemMsg").classList.add("hidden");
+        rowIdC++;
+        var rid = "r_" + rowIdC;
+        var tr = document.createElement("tr");
+        tr.id = rid;
+        tr.className = "border-b border-stone-100 row-anim";
+        var desc = data ? data.description : "";
+        var qty = data ? data.quantity : "";
+        var price = data ? data.unitPrice : "";
+        tr.innerHTML =
+          '<td class="px-3 py-2 text-gray-400 font-mono text-[10px] rnum"></td>' +
+          '<td class="px-3 py-2"><input type="text" value="' +
+          esc(desc) +
+          '" placeholder="Nama item..." class="w-full px-2 py-1.5 rounded border border-stone-200 text-sm bg-white transition rdesc"></td>' +
+          '<td class="px-3 py-2"><input type="number" value="' +
+          qty +
+          '" min="1" placeholder="0" class="w-full px-2 py-1.5 rounded border border-stone-200 text-sm bg-white transition text-right rqty" oninput="calcRow(this);recalc()"></td>' +
+          '<td class="px-3 py-2"><div class="relative"><span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]">Rp</span><input type="text" value="' +
+          (price ? fmtRp(price).replace("Rp ", "") : "") +
+          '" inputmode="numeric" placeholder="0" class="w-full pl-7 pr-2 py-1.5 rounded border border-stone-200 text-sm bg-white transition text-right rprc" oninput="fmtCurIn(this);calcRow(this)" onblur="fmtCurBl(this);calcRow(this)"></div></td>' +
+          '<td class="px-3 py-2 text-right font-semibold text-gray-800 text-sm rtotal">Rp 0</td>' +
+          '<td class="px-3 py-2 text-center"><button type="button" onclick="delRow(\'' +
+          rid +
+          '\')" class="text-red-400 hover:text-red-600 transition p-1" title="Hapus item"><i class="fa-solid fa-trash-can text-sm"></i></button></td>';
+        tbody.appendChild(tr);
+        renum();
+        if (data) {
+          var pi = tr.querySelector(".rprc");
+          pi.value = fmtRp(data.unitPrice);
+          calcRow(pi);
+        }
+        recalc();
+      }
+      function delRow(rid) {
+        var row = document.getElementById(rid);
+        if (!row) return;
+        row.style.opacity = "0";
+        row.style.transform = "translateX(20px)";
+        row.style.transition = "all .2s ease";
+        setTimeout(function () {
+          row.remove();
+          renum();
+          recalc();
+          if (!document.getElementById("itemBody").children.length)
+            document.getElementById("noItemMsg").classList.remove("hidden");
+        }, 220);
+      }
+      function renum() {
+        var rows = document.querySelectorAll("#itemBody tr");
+        for (var i = 0; i < rows.length; i++)
+          rows[i].querySelector(".rnum").textContent = i + 1;
+      }
+      function calcRow(el) {
+        var row = el.closest("tr");
+        var qty = parseInt(row.querySelector(".rqty").value) || 0;
+        var prcRaw = row.querySelector(".rprc").value.replace(/[^\d-]/g, "");
+        var prc = parseInt(prcRaw) || 0;
+        row.querySelector(".rtotal").textContent = fmtRp(qty * prc);
+      }
+
+      // ============ PERHITUNGAN ============
+      function recalc() {
+        var sub = 0;
+        var rows = document.querySelectorAll("#itemBody tr");
+        for (var i = 0; i < rows.length; i++) {
+          var q = parseInt(rows[i].querySelector(".rqty").value) || 0;
+          var p =
+            parseInt(
+              rows[i].querySelector(".rprc").value.replace(/[^\d-]/g, ""),
+            ) || 0;
+          sub += q * p;
+        }
+        var ppnAmt = 0;
+        var ppnV =
+          parseFloat(
+            document.getElementById("fPPN").value.replace(/[^\d.-]/g, ""),
+          ) || 0;
+        ppnAmt = taxModes.ppn === "percent" ? (sub * ppnV) / 100 : ppnV;
+        var pphAmt = 0;
+        var pphV =
+          parseFloat(
+            document.getElementById("fPPH").value.replace(/[^\d.-]/g, ""),
+          ) || 0;
+        pphAmt = taxModes.pph === "percent" ? (sub * pphV) / 100 : pphV;
+        var grand = sub + ppnAmt - pphAmt;
+        document.getElementById("dSub").textContent = fmtRp(sub);
+        document.getElementById("bkSub").textContent = fmtRp(sub);
+        document.getElementById("bkPpnLabel").textContent =
+          taxModes.ppn === "percent" ? "PPN (" + ppnV + "%)" : "PPN (Rp)";
+        document.getElementById("bkPpnVal").textContent = "+ " + fmtRp(ppnAmt);
+        document.getElementById("bkPphLabel").textContent =
+          taxModes.pph === "percent" ? "PPH (" + pphV + "%)" : "PPH (Rp)";
+        document.getElementById("bkPphVal").textContent = "- " + fmtRp(pphAmt);
+        document.getElementById("dGrand").textContent = fmtRp(grand);
+      }
+
+      // ============ TAX MODE ============
+      function setTaxM(tax, mode) {
+        taxModes[tax] = mode;
+        var btns = document.querySelectorAll('[data-tax="' + tax + '"]');
+        for (var i = 0; i < btns.length; i++) {
+          if (btns[i].dataset.mode === mode) {
+            btns[i].classList.add("on");
+            btns[i].classList.remove("bg-stone-50", "text-gray-500");
+          } else {
+            btns[i].classList.remove("on");
+            btns[i].classList.add("bg-stone-50", "text-gray-500");
+          }
+        }
+        document.getElementById(tax + "Sfx").textContent =
+          mode === "percent" ? "%" : "Rp";
+        recalc();
+      }
+      function updateSegBtns(tax) {
+        var btns = document.querySelectorAll('[data-tax="' + tax + '"]');
+        for (var i = 0; i < btns.length; i++) {
+          if (btns[i].dataset.mode === taxModes[tax]) {
+            btns[i].classList.add("on");
+            btns[i].classList.remove("bg-stone-50", "text-gray-500");
+          } else {
+            btns[i].classList.remove("on");
+            btns[i].classList.add("bg-stone-50", "text-gray-500");
+          }
+        }
+      }
+
+      // ============ TOGGLE PEMBAYARAN ============
+      function togPay() {
+        var dis = document.getElementById("fPayStat").value !== "Terbayar";
+        document.getElementById("fPayDate").disabled = dis;
+        document.getElementById("fPayNote").disabled = dis;
+        if (dis) {
+          document.getElementById("fPayDate").value = "";
+          document.getElementById("fPayNote").value = "";
+        }
+      }
+      var formOpen = true;
+      function togForm() {
+        formOpen = !formOpen;
+        document.getElementById("formBody").style.display = formOpen
+          ? ""
+          : "none";
+        document.querySelector("#togBtn i").className = formOpen
+          ? "fa-solid fa-chevron-up text-sm"
+          : "fa-solid fa-chevron-down text-sm";
+      }
+
+      // ============ VALIDASI ============
+      function validate() {
+        var errs = [];
+        if (!document.getElementById("fClient").value.trim())
+          errs.push("Nama Perusahaan Klien wajib diisi.");
+        if (!document.getElementById("fReceiver").value.trim())
+          errs.push("Nama Perusahaan Penerima wajib diisi.");
+        if (!document.getElementById("fPONum").value.trim())
+          errs.push("Nomor Purchase Order wajib diisi.");
+        var poNum = document.getElementById("fPONum").value.trim();
+        for (var i = 0; i < poList.length; i++) {
+          if (poList[i].poNumber === poNum && poList[i].id !== editingId) {
+            errs.push("Nomor PO sudah digunakan.");
+            break;
+          }
+        }
+        var rows = document.querySelectorAll("#itemBody tr");
+        if (!rows.length) errs.push("Minimal 1 item PO harus ditambahkan.");
+        for (var j = 0; j < rows.length; j++) {
+          var d = rows[j].querySelector(".rdesc").value.trim();
+          var q = parseInt(rows[j].querySelector(".rqty").value) || 0;
+          var p =
+            parseInt(
+              rows[j].querySelector(".rprc").value.replace(/[^\d-]/g, ""),
+            ) || 0;
+          if (!d) errs.push("Item " + (j + 1) + ": Keterangan wajib diisi.");
+          if (q <= 0) errs.push("Item " + (j + 1) + ": Jumlah tidak boleh 0.");
+          if (p <= 0)
+            errs.push(
+              "Item " + (j + 1) + ": Harga satuan tidak boleh kosong atau 0.",
+            );
+        }
+        var gt = parseCur(document.getElementById("dGrand").textContent);
+        if (gt < 0) errs.push("Total Pesanan tidak boleh negatif.");
+        return errs;
+      }
+
+      // ============ SIMPAN PO ============
+      function savePO() {
+        try {
+          var errs = validate();
+          if (errs.length) {
+            toast(errs[0], "error");
+            return;
+          }
+          var items = [];
+          var rows = document.querySelectorAll("#itemBody tr");
+          for (var i = 0; i < rows.length; i++) {
+            var d = rows[i].querySelector(".rdesc").value.trim();
+            var q = parseInt(rows[i].querySelector(".rqty").value) || 0;
+            var p =
+              parseInt(
+                rows[i].querySelector(".rprc").value.replace(/[^\d-]/g, ""),
+              ) || 0;
+            items.push({
+              description: d,
+              quantity: q,
+              unitPrice: p,
+              total: q * p,
+            });
+          }
+          var sub = 0;
+          for (var k = 0; k < items.length; k++) sub += items[k].total;
+          var ppnV =
+            parseFloat(
+              document.getElementById("fPPN").value.replace(/[^\d.-]/g, ""),
+            ) || 0;
+          var ppnAmt = taxModes.ppn === "percent" ? (sub * ppnV) / 100 : ppnV;
+          var pphV =
+            parseFloat(
+              document.getElementById("fPPH").value.replace(/[^\d.-]/g, ""),
+            ) || 0;
+          var pphAmt = taxModes.pph === "percent" ? (sub * pphV) / 100 : pphV;
+          var grand = sub + ppnAmt - pphAmt;
+          var existing = null;
+          if (editingId) {
+            for (var m = 0; m < poList.length; m++) {
+              if (poList[m].id === editingId) {
+                existing = poList[m];
+                break;
+              }
+            }
+          }
+          var po = {
+            id: editingId || genId(),
+            clientName: document.getElementById("fClient").value.trim(),
+            receiverName: document.getElementById("fReceiver").value.trim(),
+            poNumber: document.getElementById("fPONum").value.trim(),
+            releaseDate: document.getElementById("fReleaseDate").value,
+            startDate: document.getElementById("fStart").value,
+            endDate: document.getElementById("fEnd").value,
+            items: items,
+            subTotal: sub,
+            ppnMode: taxModes.ppn,
+            ppnValue: ppnV,
+            ppnAmount: ppnAmt,
+            pphMode: taxModes.pph,
+            pphValue: pphV,
+            pphAmount: pphAmt,
+            grandTotal: grand,
+            claimDate: document.getElementById("fClaimDate").value,
+            claimNominal: parseCur(document.getElementById("fClaimNom").value),
+            claimStatus: document.getElementById("fClaimStat").value,
+            paymentStatus: document.getElementById("fPayStat").value,
+            paymentDate: document.getElementById("fPayDate").value,
+            paymentNote: document.getElementById("fPayNote").value.trim(),
+            createdAt: existing ? existing.createdAt : new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          if (editingId) {
+            for (var n = 0; n < poList.length; n++) {
+              if (poList[n].id === editingId) {
+                poList[n] = po;
+                break;
+              }
+            }
+            toast("Purchase Order berhasil diperbarui!", "success");
+          } else {
+            poList.push(po);
+            toast("Purchase Order berhasil disimpan!", "success");
+          }
+          saveSt();
+          resetForm();
+          renderList();
+        } catch (e) {
+          toast("Error saat menyimpan: " + e.message, "error");
+        }
+      }
+
+      // ============ RESET FORM ============
+      function resetForm() {
+        editingId = null;
+        document.getElementById("formTitle").textContent =
+          "Input Purchase Order Baru";
+        document.getElementById("saveLabel").textContent = "Simpan PO";
+        document.getElementById("fClient").value = "";
+        document.getElementById("fReceiver").value = "";
+        document.getElementById("fPONum").value = "";
+        document.getElementById("fReleaseDate").value = "";
+        document.getElementById("fStart").value = "";
+        document.getElementById("fEnd").value = "";
+        document.getElementById("itemBody").innerHTML = "";
+        document.getElementById("noItemMsg").classList.remove("hidden");
+        taxModes.ppn = "percent";
+        taxModes.pph = "percent";
+        updateSegBtns("ppn");
+        document.getElementById("ppnSfx").textContent = "%";
+        document.getElementById("fPPN").value = "11";
+        updateSegBtns("pph");
+        document.getElementById("pphSfx").textContent = "%";
+        document.getElementById("fPPH").value = "0";
+        document.getElementById("fClaimDate").value = "";
+        document.getElementById("fClaimNom").value = "";
+        document.getElementById("fClaimStat").value = "Belum Claim";
+        document.getElementById("fPayStat").value = "Belum Terbayar";
+        togPay();
+        recalc();
+        addRow();
+        document.getElementById("fStart").value = new Date()
+          .toISOString()
+          .slice(0, 10);
+        document
+          .getElementById("formSection")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // ============ EDIT PO ============
+      function editPO(id) {
+        var po = null;
+        for (var i = 0; i < poList.length; i++) {
+          if (poList[i].id === id) {
+            po = poList[i];
+            break;
+          }
+        }
+        if (!po) return;
+        editingId = id;
+        document.getElementById("formTitle").textContent =
+          "Edit Purchase Order";
+        document.getElementById("saveLabel").textContent = "Update PO";
+        document.getElementById("fClient").value = po.clientName;
+        document.getElementById("fReceiver").value = po.receiverName || "";
+        document.getElementById("fPONum").value = po.poNumber;
+        document.getElementById("fReleaseDate").value = po.releaseDate || "";
+        document.getElementById("fStart").value = po.startDate || "";
+        document.getElementById("fEnd").value = po.endDate || "";
+        document.getElementById("itemBody").innerHTML = "";
+        if (po.items && po.items.length) {
+          for (var j = 0; j < po.items.length; j++) addRow(po.items[j]);
+        } else addRow();
+        taxModes.ppn = po.ppnMode || "percent";
+        updateSegBtns("ppn");
+        document.getElementById("ppnSfx").textContent =
+          taxModes.ppn === "percent" ? "%" : "Rp";
+        document.getElementById("fPPN").value =
+          po.ppnValue != null ? po.ppnValue : 11;
+        taxModes.pph = po.pphMode || "percent";
+        updateSegBtns("pph");
+        document.getElementById("pphSfx").textContent =
+          taxModes.pph === "percent" ? "%" : "Rp";
+        document.getElementById("fPPH").value =
+          po.pphValue != null ? po.pphValue : 0;
+        document.getElementById("fClaimDate").value = po.claimDate || "";
+        document.getElementById("fClaimNom").value = po.claimNominal
+          ? fmtRp(po.claimNominal)
+          : "";
+        document.getElementById("fClaimStat").value =
+          po.claimStatus || "Belum Claim";
+        document.getElementById("fPayStat").value =
+          po.paymentStatus || "Belum Terbayar";
+        togPay();
+        document.getElementById("fPayDate").value = po.paymentDate || "";
+        document.getElementById("fPayNote").value = po.paymentNote || "";
+        recalc();
+        if (!formOpen) togForm();
+        document
+          .getElementById("formSection")
+          .scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // ============ DELETE ============
+      function deletePO(id) {
+        delTarget = id;
+        var po = null;
+        for (var i = 0; i < poList.length; i++) {
+          if (poList[i].id === id) {
+            po = poList[i];
+            break;
+          }
+        }
+        document.getElementById("delMsg").textContent =
+          'Hapus PO "' +
+          esc(po ? po.poNumber : "") +
+          '" dari "' +
+          esc(po ? po.clientName : "") +
+          '"?';
+        var m = document.getElementById("delModal");
+        m.classList.remove("hidden");
+        m.classList.add("flex");
+      }
+      function closeDel() {
+        document.getElementById("delModal").classList.add("hidden");
+        document.getElementById("delModal").classList.remove("flex");
+        delTarget = null;
+      }
+      function confirmDel() {
+        if (delTarget) {
+          var nl = [];
+          for (var i = 0; i < poList.length; i++) {
+            if (poList[i].id !== delTarget) nl.push(poList[i]);
+          }
+          poList = nl;
+          saveSt();
+          renderList();
+          toast("PO berhasil dihapus.", "success");
+          if (editingId === delTarget) resetForm();
+        }
+        closeDel();
+      }
+
+      // ============ VIEW DETAIL ============
+      function viewPO(id) {
+        var po = null;
+        for (var i = 0; i < poList.length; i++) {
+          if (poList[i].id === id) {
+            po = poList[i];
+            break;
+          }
+        }
+        if (!po) return;
+        var its = "";
+        for (var j = 0; j < po.items.length; j++) {
+          its +=
+            '<tr class="border-b border-stone-100"><td class="px-3 py-2 text-gray-500">' +
+            (j + 1) +
+            '</td><td class="px-3 py-2">' +
+            esc(po.items[j].description) +
+            '</td><td class="px-3 py-2 text-right">' +
+            po.items[j].quantity +
+            '</td><td class="px-3 py-2 text-right">' +
+            fmtRp(po.items[j].unitPrice) +
+            '</td><td class="px-3 py-2 text-right font-semibold">' +
+            fmtRp(po.items[j].total) +
+            "</td></tr>";
+        }
+        var h =
+          '<div id="viewM" class="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onclick="if(event.target===this)this.remove()"><div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto anim-up"><div class="px-6 py-4 rounded-t-2xl flex items-center justify-between" style="background:linear-gradient(135deg,#14532d,#1a6b3a)"><h3 class="text-white font-bold text-base">Detail Purchase Order</h3><button onclick="document.getElementById(\'viewM\').remove()" class="text-white/60 hover:text-white text-xl leading-none">&times;</button></div><div class="p-6 space-y-4"><div class="grid grid-cols-2 gap-4 text-sm"><div><span class="text-gray-400 text-xs">Klien</span><br><strong>' +
+          esc(po.clientName) +
+          '</strong></div><div><span class="text-gray-400 text-xs">Penerima</span><br><strong>' +
+          esc(po.receiverName || "-") +
+          '</strong></div><div><span class="text-gray-400 text-xs">No. PO</span><br><strong class="text-green-800">' +
+          esc(po.poNumber) +
+          '</strong></div><div><span class="text-gray-400 text-xs">Tgl Rilis</span><br>' +
+          fmtDate(po.releaseDate) +
+          '</div><div><span class="text-gray-400 text-xs">Periode</span><br>' +
+          fmtDate(po.startDate) +
+          " — " +
+          fmtDate(po.endDate) +
+          '</div></div><hr class="border-stone-200"><table class="w-full text-sm"><thead><tr class="bg-stone-100 text-gray-500 text-[10px] uppercase tracking-wider"><th class="px-3 py-2 text-left">#</th><th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-right">Qty</th><th class="px-3 py-2 text-right">Harga</th><th class="px-3 py-2 text-right">Total</th></tr></thead><tbody>' +
+          its +
+          '</tbody></table><hr class="border-stone-200"><div class="space-y-1.5 text-sm max-w-xs ml-auto"><div class="flex justify-between"><span class="text-gray-500">Sub Total</span><span class="font-semibold">' +
+          fmtRp(po.subTotal) +
+          '</span></div><div class="flex justify-between"><span class="text-green-700">PPN ' +
+          (po.ppnMode === "percent" ? "(" + po.ppnValue + "%)" : "") +
+          '</span><span class="font-semibold text-green-700">+ ' +
+          fmtRp(po.ppnAmount) +
+          '</span></div><div class="flex justify-between"><span class="text-red-600">PPH ' +
+          (po.pphMode === "percent" ? "(" + po.pphValue + "%)" : "") +
+          '</span><span class="font-semibold text-red-600">- ' +
+          fmtRp(po.pphAmount) +
+          '</span></div><hr class="border-stone-200 my-1"><div class="flex justify-between text-base"><span class="font-bold text-amber-700">Total Pesanan</span><span class="font-extrabold text-amber-700">' +
+          fmtRp(po.grandTotal) +
+          '</span></div></div><hr class="border-stone-200"><div class="grid grid-cols-2 gap-3 text-sm"><div><span class="text-gray-400 text-xs">Tgl Claim</span><br>' +
+          fmtDate(po.claimDate) +
+          '</div><div><span class="text-gray-400 text-xs">Nom. Claim</span><br>' +
+          (po.claimNominal ? fmtRp(po.claimNominal) : "-") +
+          '</div><div><span class="text-gray-400 text-xs">Status Claim</span><br>' +
+          (po.claimStatus === "Sudah Claim"
+            ? '<span class="text-green-600 font-semibold">Sudah Claim</span>'
+            : '<span class="text-amber-600 font-semibold">Belum Claim</span>') +
+          '</div><div><span class="text-gray-400 text-xs">Status Bayar</span><br>' +
+          (po.paymentStatus === "Terbayar"
+            ? '<span class="text-green-600 font-semibold">Terbayar</span>'
+            : '<span class="text-red-600 font-semibold">Belum Terbayar</span>') +
+          "</div>" +
+          (po.paymentDate
+            ? '<div><span class="text-gray-400 text-xs">Tgl Terbayar</span><br>' +
+              fmtDate(po.paymentDate) +
+              "</div>"
+            : "") +
+          (po.paymentNote
+            ? '<div><span class="text-gray-400 text-xs">Keterangan</span><br>' +
+              esc(po.paymentNote) +
+              "</div>"
+            : "") +
+          "</div></div></div></div>";
+        document.body.insertAdjacentHTML("beforeend", h);
+      }
+
+      // ============ RENDER DAFTAR ============
+      function renderList() {
+        var src = document
+          .getElementById("srcInput")
+          .value.toLowerCase()
+          .trim();
+        var fPay = document.getElementById("fltPay").value;
+        var fCl = document.getElementById("fltClaim").value;
+        var filtered = [];
+        for (var i = 0; i < poList.length; i++) {
+          var po = poList[i];
+          var ms =
+            !src ||
+            po.clientName.toLowerCase().indexOf(src) !== -1 ||
+            po.poNumber.toLowerCase().indexOf(src) !== -1 ||
+            (po.receiverName || "").toLowerCase().indexOf(src) !== -1;
+          var mp = fPay === "all" || po.paymentStatus === fPay;
+          var mc = fCl === "all" || po.claimStatus === fCl;
+          if (ms && mp && mc) filtered.push(po);
+        }
+        filtered.sort(function (a, b) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        var tbody = document.getElementById("listBody");
+        var empty = document.getElementById("emptyList");
+        document.getElementById("poCount").textContent = poList.length;
+        if (!filtered.length) {
+          tbody.innerHTML = "";
+          empty.classList.remove("hidden");
+          document.getElementById("sumBar").classList.add("hidden");
+          return;
+        }
+        empty.classList.add("hidden");
+        var html = "";
+        for (var j = 0; j < filtered.length; j++) {
+          var p = filtered[j];
+          var payB =
+            p.paymentStatus === "Terbayar"
+              ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 badge-pulse"><i class="fa-solid fa-circle-check text-[9px]"></i>Terbayar</span>'
+              : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700"><i class="fa-solid fa-clock text-[9px]"></i>Belum</span>';
+          var clB =
+            p.claimStatus === "Sudah Claim"
+              ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700"><i class="fa-solid fa-check text-[9px]"></i>Claimed</span>'
+              : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700"><i class="fa-solid fa-hourglass-half text-[9px]"></i>Belum</span>';
+          html +=
+            '<tr class="po-row border-b border-stone-100"><td class="px-3 py-3"><div class="font-semibold text-gray-900 text-sm">' +
+            esc(p.clientName) +
+            '</div><div class="text-[10px] text-gray-400 mt-0.5">' +
+            clB +
+            '</div></td><td class="px-3 py-3 text-sm text-gray-700">' +
+            esc(p.receiverName || "-") +
+            '</td><td class="px-3 py-3 font-mono text-xs font-bold text-green-800">' +
+            esc(p.poNumber) +
+            '</td><td class="px-3 py-3 text-center text-gray-500 text-[10px]">' +
+            fmtDate(p.releaseDate) +
+            '</td><td class="px-3 py-3 text-right text-gray-600 text-xs">' +
+            fmtRp(p.subTotal) +
+            '</td><td class="px-3 py-3 text-right font-bold text-gray-900 text-sm">' +
+            fmtRp(p.grandTotal) +
+            '</td><td class="px-3 py-3 text-center text-gray-500 text-[10px]">' +
+            fmtDate(p.startDate) +
+            '</td><td class="px-3 py-3 text-center text-gray-500 text-[10px]">' +
+            fmtDate(p.endDate) +
+            '</td><td class="px-3 py-3 text-center text-gray-500 text-[10px]">' +
+            fmtDate(p.claimDate) +
+            '</td><td class="px-3 py-3 text-right text-gray-600 text-xs">' +
+            (p.claimNominal ? fmtRp(p.claimNominal) : "-") +
+            '</td><td class="px-3 py-3 text-center">' +
+            payB +
+            '</td><td class="px-3 py-3 text-center"><div class="flex items-center justify-center gap-0.5"><button onclick="viewPO(\'' +
+            p.id +
+            '\')" class="p-1.5 rounded-lg hover:bg-stone-100 text-gray-400 hover:text-blue-600 transition" title="Detail"><i class="fa-solid fa-eye text-xs"></i></button><button onclick="editPO(\'' +
+            p.id +
+            '\')" class="p-1.5 rounded-lg hover:bg-stone-100 text-gray-400 hover:text-amber-600 transition" title="Edit"><i class="fa-solid fa-pen text-xs"></i></button><button onclick="deletePO(\'' +
+            p.id +
+            '\')" class="p-1.5 rounded-lg hover:bg-stone-100 text-gray-400 hover:text-red-600 transition" title="Hapus"><i class="fa-solid fa-trash text-xs"></i></button><button onclick="printPO(\'' +
+            p.id +
+            '\')" class="p-1.5 rounded-lg hover:bg-stone-100 text-gray-400 hover:text-green-600 transition" title="Cetak"><i class="fa-solid fa-print text-xs"></i></button></div></td></tr>';
+        }
+        tbody.innerHTML = html;
+        var sb = document.getElementById("sumBar");
+        sb.classList.remove("hidden");
+        var totalAll = 0,
+          unpaid = 0,
+          paid = 0;
+        for (var k = 0; k < poList.length; k++) {
+          totalAll += poList[k].grandTotal;
+          if (poList[k].paymentStatus === "Belum Terbayar") unpaid++;
+          else paid++;
+        }
+        document.getElementById("smCnt").textContent = poList.length;
+        document.getElementById("smTot").textContent = fmtRp(totalAll);
+        document.getElementById("smUn").textContent = unpaid;
+        document.getElementById("smPd").textContent = paid;
+      }
+
+      // ============ EXPORT EXCEL ============
+      function expExcel() {
+        if (!poList.length) {
+          toast("Tidak ada data untuk diekspor.", "error");
+          return;
+        }
+        try {
+          var hdr = [
+            "No",
+            "Nama Klien",
+            "Perusahaan Penerima",
+            "Nomor PO",
+            "Tanggal Rilis",
+            "Sub Total",
+            "PPN",
+            "PPH",
+            "Total Pesanan",
+            "Tgl Awal",
+            "Tgl Selesai",
+            "Tgl Claim",
+            "Nominal Claim",
+            "Status Claim",
+            "Status Pembayaran",
+            "Tgl Terbayar",
+            "Keterangan",
+          ];
+          var csv = "\uFEFF" + hdr.join(";") + "\n";
+          for (var i = 0; i < poList.length; i++) {
+            var p = poList[i];
+            var row = [
+              i + 1,
+              p.clientName,
+              p.receiverName || "",
+              p.poNumber,
+              p.releaseDate || "",
+              p.subTotal,
+              p.ppnAmount,
+              p.pphAmount,
+              p.grandTotal,
+              p.startDate || "",
+              p.endDate || "",
+              p.claimDate || "",
+              p.claimNominal || "",
+              p.claimStatus,
+              p.paymentStatus,
+              p.paymentDate || "",
+              p.paymentNote || "",
+            ];
+            csv +=
+              row
+                .map(function (c) {
+                  return '"' + String(c).replace(/"/g, '""') + '"';
+                })
+                .join(";") + "\n";
+          }
+          var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download =
+            "Daftar_PO_" + new Date().toISOString().slice(0, 10) + ".csv";
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(function () {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+          toast("File CSV berhasil diunduh!", "success");
+        } catch (e) {
+          toast("Gagal export Excel: " + e.message, "error");
+        }
+      }
+
+      // ============ EXPORT PDF DAFTAR PO ============
+      function expPDFAll() {
+        if (!poList.length) {
+          toast("Tidak ada data.", "error");
+          return;
+        }
+        try {
+          var rows = "";
+          for (var i = 0; i < poList.length; i++) {
+            var p = poList[i];
+            rows +=
+              '<tr style="border-bottom:1px solid #e5e7eb"><td style="padding:6px 8px;text-align:center">' +
+              (i + 1) +
+              '</td><td style="padding:6px 8px">' +
+              esc(p.clientName) +
+              '</td><td style="padding:6px 8px">' +
+              esc(p.receiverName || "-") +
+              '</td><td style="padding:6px 8px">' +
+              esc(p.poNumber) +
+              '</td><td style="padding:6px 8px;text-align:center">' +
+              fmtDate(p.releaseDate) +
+              '</td><td style="padding:6px 8px;text-align:right">' +
+              fmtRp(p.subTotal) +
+              '</td><td style="padding:6px 8px;text-align:right">' +
+              fmtRp(p.grandTotal) +
+              '</td><td style="padding:6px 8px;text-align:center">' +
+              fmtDate(p.startDate) +
+              '</td><td style="padding:6px 8px;text-align:center">' +
+              fmtDate(p.endDate) +
+              '</td><td style="padding:6px 8px;text-align:center">' +
+              (p.claimNominal ? fmtRp(p.claimNominal) : "-") +
+              '</td><td style="padding:6px 8px;text-align:center">' +
+              p.claimStatus +
+              '</td><td style="padding:6px 8px;text-align:center">' +
+              p.paymentStatus +
+              "</td></tr>";
+          }
+          var html =
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Daftar Purchase Order</title><style>body{font-family:\'Segoe UI\',sans-serif;color:#1c1917;margin:30px;font-size:12px}h1{font-size:20px;margin:0 0 4px}.hbar{background:#14532d;color:#fff;padding:14px 18px;border-radius:6px;margin-bottom:16px}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#f5f5f4;padding:6px 8px;text-align:left;text-transform:uppercase;letter-spacing:.3px;font-size:9px}@media print{body{margin:10px}}</style></head><body><div class="hbar"><h1>DAFTAR PURCHASE ORDER</h1><div style="opacity:.8;font-size:12px">Total: ' +
+            poList.length +
+            " PO | Dicetak: " +
+            new Date().toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            }) +
+            '</div></div><table><thead><tr><th style="width:30px;text-align:center">#</th><th>Klien</th><th>Penerima</th><th>No. PO</th><th style="text-align:center">Tgl Rilis</th><th style="text-align:right">Sub Total</th><th style="text-align:right">Total</th><th style="text-align:center">Awal</th><th style="text-align:center">Selesai</th><th style="text-align:right">Nom. Claim</th><th style="text-align:center">Claim</th><th style="text-align:center">Bayar</th></tr></thead><tbody>' +
+            rows +
+            '</tbody></table><div style="margin-top:30px;text-align:center;color:#a8a29e;font-size:10px">Purchase Order System</div></body></html>';
+          var w = window.open("", "_blank", "width=1000,height=700");
+          w.document.write(html);
+          w.document.close();
+          setTimeout(function () {
+            w.print();
+          }, 600);
+        } catch (e) {
+          toast("Gagal export PDF: " + e.message, "error");
+        }
+      }
+
+      // ============ PRINT SINGLE PO ============
+      function printPO(id) {
+        var po = null;
+        for (var i = 0; i < poList.length; i++) {
+          if (poList[i].id === id) {
+            po = poList[i];
+            break;
+          }
+        }
+        if (!po) return;
+        try {
+          var its = "";
+          for (var j = 0; j < po.items.length; j++) {
+            its +=
+              '<tr style="border-bottom:1px solid #e5e7eb"><td style="padding:8px 12px;text-align:center">' +
+              (j + 1) +
+              '</td><td style="padding:8px 12px">' +
+              esc(po.items[j].description) +
+              '</td><td style="padding:8px 12px;text-align:right">' +
+              po.items[j].quantity +
+              '</td><td style="padding:8px 12px;text-align:right">' +
+              fmtRp(po.items[j].unitPrice) +
+              '</td><td style="padding:8px 12px;text-align:right;font-weight:600">' +
+              fmtRp(po.items[j].total) +
+              "</td></tr>";
+          }
+          var w = window.open("", "_blank", "width=800,height=600");
+          w.document.write(
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PO ' +
+              esc(po.poNumber) +
+              '</title><style>body{font-family:\'Segoe UI\',sans-serif;color:#1c1917;margin:40px;font-size:13px}h1{font-size:22px;margin:0 0 4px}.hbar{background:#14532d;color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#f5f5f4;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px}.sr{display:flex;justify-content:space-between;padding:5px 0}.gt{font-size:20px;font-weight:800;color:#b45309}.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lb{color:#78716c;font-size:11px}.vl{font-weight:600}hr{border:none;border-top:1px solid #e5e7eb;margin:14px 0}</style></head><body><div class="hbar"><h1>PURCHASE ORDER</h1><div style="opacity:.8;font-size:13px">' +
+              esc(po.poNumber) +
+              '</div></div><div class="g2" style="margin-bottom:18px"><div><div class="lb">Klien</div><div class="vl" style="font-size:15px">' +
+              esc(po.clientName) +
+              '</div></div><div><div class="lb">Penerima</div><div class="vl" style="font-size:15px">' +
+              esc(po.receiverName || "-") +
+              '</div></div><div><div class="lb">No. PO</div><div class="vl">' +
+              esc(po.poNumber) +
+              '</div></div><div><div class="lb">Tgl Rilis</div><div class="vl">' +
+              fmtDate(po.releaseDate) +
+              '</div></div><div><div class="lb">Periode</div><div class="vl">' +
+              fmtDate(po.startDate) +
+              " — " +
+              fmtDate(po.endDate) +
+              '</div></div></div><table><thead><tr><th style="width:40px;text-align:center">#</th><th>Keterangan</th><th style="width:70px;text-align:right">Qty</th><th style="width:130px;text-align:right">Harga Satuan</th><th style="width:130px;text-align:right">Total</th></tr></thead><tbody>' +
+              its +
+              '</tbody></table><hr><div style="max-width:320px;margin-left:auto"><div class="sr"><span>Sub Total</span><span>' +
+              fmtRp(po.subTotal) +
+              '</span></div><div class="sr"><span style="color:#16a34a">PPN ' +
+              (po.ppnMode === "percent" ? "(" + po.ppnValue + "%)" : "") +
+              '</span><span style="color:#16a34a">+ ' +
+              fmtRp(po.ppnAmount) +
+              '</span></div><div class="sr"><span style="color:#dc2626">PPH ' +
+              (po.pphMode === "percent" ? "(" + po.pphValue + "%)" : "") +
+              '</span><span style="color:#dc2626">- ' +
+              fmtRp(po.pphAmount) +
+              '</span></div><hr><div class="sr"><strong>TOTAL PESANAN</strong><strong class="gt">' +
+              fmtRp(po.grandTotal) +
+              '</strong></div></div><hr><div class="g2"><div><div class="lb">Tgl Claim</div><div class="vl">' +
+              fmtDate(po.claimDate) +
+              '</div></div><div><div class="lb">Nom. Claim</div><div class="vl">' +
+              (po.claimNominal ? fmtRp(po.claimNominal) : "-") +
+              '</div></div><div><div class="lb">Status Claim</div><div class="vl">' +
+              po.claimStatus +
+              '</div></div><div><div class="lb">Status Bayar</div><div class="vl">' +
+              po.paymentStatus +
+              "</div></div>" +
+              (po.paymentDate
+                ? '<div><div class="lb">Tgl Terbayar</div><div class="vl">' +
+                  fmtDate(po.paymentDate) +
+                  "</div></div>"
+                : "") +
+              (po.paymentNote
+                ? '<div><div class="lb">Keterangan</div><div class="vl">' +
+                  esc(po.paymentNote) +
+                  "</div></div>"
+                : "") +
+              '</div><div style="margin-top:40px;text-align:center;color:#a8a29e;font-size:11px">Dicetak pada ' +
+              new Date().toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }) +
+              "</div></body></html>",
+          );
+          w.document.close();
+          setTimeout(function () {
+            w.print();
+          }, 500);
+        } catch (e) {
+          toast("Gagal cetak: " + e.message, "error");
+        }
+      }
+
+      // ============ TOAST ============
+      function toast(msg, type) {
+        var c = document.getElementById("toastBox");
+        var t = document.createElement("div");
+        var bg =
+          type === "success"
+            ? "bg-green-800"
+            : type === "error"
+              ? "bg-red-700"
+              : "bg-stone-800";
+        var ic =
+          type === "success"
+            ? "fa-circle-check"
+            : type === "error"
+              ? "fa-circle-xmark"
+              : "fa-circle-info";
+        t.className =
+          "pointer-events-auto " +
+          bg +
+          " text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 toast-in max-w-sm";
+        t.innerHTML =
+          '<i class="fa-solid ' +
+          ic +
+          ' text-lg shrink-0"></i><span class="text-sm font-medium">' +
+          msg +
+          "</span>";
+        c.appendChild(t);
+        setTimeout(function () {
+          t.classList.remove("toast-in");
+          t.classList.add("toast-out");
+          setTimeout(function () {
+            t.remove();
+          }, 280);
+        }, 3500);
+      }
+
+      // ============ STORAGE ============
+      function saveSt() {
+        try {
+          localStorage.setItem("poData", JSON.stringify(poList));
+        } catch (e) {}
+      }
+      function loadSt() {
+        try {
+          var d = localStorage.getItem("poData");
+          if (d) {
+            var p = JSON.parse(d);
+            if (Array.isArray(p)) poList = p;
+          }
+        } catch (e) {
+          poList = [];
+        }
+      }
+
+      // ============ CLOCK ============
+      function updClock() {
+        var el = document.getElementById("hdrClock");
+        if (el)
+          el.textContent = new Date().toLocaleDateString("id-ID", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          });
+      }
+
+      // ============ INIT ============
+      document.addEventListener("DOMContentLoaded", function () {
+        loadSt();
+        addRow();
+        recalc();
+        renderList();
+        updClock();
+        setInterval(updClock, 60000);
+        document.getElementById("fStart").value = new Date()
+          .toISOString()
+          .slice(0, 10);
+      });
+    </script>
+  </body>
+</html>
